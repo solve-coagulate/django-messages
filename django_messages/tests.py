@@ -1,13 +1,10 @@
-try:
-    from django.core.urlresolvers import reverse
-except ImportError:
-    from django.urls import reverse
+from django.urls import reverse
 
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.test.client import Client, RequestFactory
 from django.utils import timezone
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.contrib.auth.models import AnonymousUser
 from django.template import Template, Context
 from django_messages.forms import ComposeForm
@@ -265,7 +262,7 @@ class RecipientFilterTestCase(TestCase):
             recipient_filter=self.f
         )
         assert not form.is_valid()
-        assert self.user2.username in force_text(form.errors)
+        assert self.user2.username in force_str(form.errors)
 
     def testRecipientFilterMixed(self):
         form = ComposeForm(
@@ -273,4 +270,4 @@ class RecipientFilterTestCase(TestCase):
             recipient_filter=self.f
         )
         assert not form.is_valid()
-        assert self.user2.username in force_text(form.errors)
+        assert self.user2.username in force_str(form.errors)
