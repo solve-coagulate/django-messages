@@ -2,7 +2,6 @@ import re
 import django
 from django.utils.text import wrap
 from django.utils.translation import ugettext, ugettext_lazy as _
-from django.contrib.sites.models import Site
 from django.template.loader import render_to_string
 from django.conf import settings
 
@@ -34,7 +33,7 @@ def format_subject(subject):
     a counter is added.
     NOTE: Currently unused. First step to fix Issue #48.
     FIXME: Any hints how to make this i18n aware are very welcome.
-    
+
     """
     subject_prefix_re = r'^Re\[(\d*)\]:\ '
     m = re.match(subject_prefix_re, subject, re.U)
@@ -50,13 +49,13 @@ def format_subject(subject):
         except:
             # if anything fails here, fall back to the old mechanism
             pass
-        
+
     return ugettext(u"Re%(prefix)s: %(subject)s") % {
-        'subject': subject, 
+        'subject': subject,
         'prefix': prefix
     }
-    
-def new_message_email(sender, instance, signal, 
+
+def new_message_email(sender, instance, signal,
         subject_prefix=_(u'New Message: %(subject)s'),
         template_name="django_messages/new_message.html",
         default_protocol=None,
@@ -73,6 +72,7 @@ def new_message_email(sender, instance, signal,
 
     if 'created' in kwargs and kwargs['created']:
         try:
+            from django.contrib.sites.models import Site
             current_domain = Site.objects.get_current().domain
             subject = subject_prefix % {'subject': instance.subject}
             message = render_to_string(template_name, {
