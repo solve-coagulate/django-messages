@@ -2,3 +2,7 @@
 MANIFEST
 dist
 .tox
+.DS_Store
+docs/build
+
+*.mo

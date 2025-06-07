@@ -1,4 +1,8 @@
 from django.conf import settings
+try:
+    from django.core.urlresolvers import reverse
+except ImportError:
+    from django.urls import reverse
 from django.db import models
 from django.db.models import signals
 from django.utils import timezone
@@ -49,11 +53,11 @@ class Message(models.Model):
     """
     A private message from user to user
     """
-    subject = models.CharField(_("Subject"), max_length=120)
+    subject = models.CharField(_("Subject"), max_length=140)
     body = models.TextField(_("Body"))
-    sender = models.ForeignKey(AUTH_USER_MODEL, related_name='sent_messages', verbose_name=_("Sender"))
-    recipient = models.ForeignKey(AUTH_USER_MODEL, related_name='received_messages', null=True, blank=True, verbose_name=_("Recipient"))
-    parent_msg = models.ForeignKey('self', related_name='next_messages', null=True, blank=True, verbose_name=_("Parent message"))
+    sender = models.ForeignKey(AUTH_USER_MODEL, related_name='sent_messages', verbose_name=_("Sender"), on_delete=models.PROTECT)
+    recipient = models.ForeignKey(AUTH_USER_MODEL, related_name='received_messages', null=True, blank=True, verbose_name=_("Recipient"), on_delete=models.SET_NULL)
+    parent_msg = models.ForeignKey('self', related_name='next_messages', null=True, blank=True, verbose_name=_("Parent message"), on_delete=models.SET_NULL)
     sent_at = models.DateTimeField(_("sent at"), null=True, blank=True)
     read_at = models.DateTimeField(_("read at"), null=True, blank=True)
     replied_at = models.DateTimeField(_("replied at"), null=True, blank=True)
@@ -78,8 +82,7 @@ class Message(models.Model):
         return self.subject
 
     def get_absolute_url(self):
-        return ('messages_detail', [self.id])
-    get_absolute_url = models.permalink(get_absolute_url)
+        return reverse('messages_detail', args=[self.id])
 
     def save(self, **kwargs):
         if not self.id:
@@ -100,6 +103,6 @@ def inbox_count_for(user):
     return Message.objects.filter(recipient=user, read_at__isnull=True, recipient_deleted_at__isnull=True).count()
 
 # fallback for email notification if django-notification could not be found
-if "notification" not in settings.INSTALLED_APPS and getattr(settings, 'DJANGO_MESSAGES_NOTIFY', True):
+if "pinax.notifications" not in settings.INSTALLED_APPS and getattr(settings, 'DJANGO_MESSAGES_NOTIFY', True):
     from django_messages.utils import new_message_email
     signals.post_save.connect(new_message_email, sender=Message)
