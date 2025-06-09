@@ -94,3 +94,26 @@ def get_user_model():
 
 def get_username_field():
     return get_user_model().USERNAME_FIELD
+
+
+def paginate_queryset(request, queryset):
+    """Return a page object if pagination is enabled.
+
+    Pagination is controlled by the ``DJANGO_MESSAGES_PAGE_LENGTH`` setting.
+    If the setting is missing or evaluates to ``False`` then ``queryset`` is
+    returned unchanged. Otherwise the queryset is wrapped using Django's
+    ``Paginator`` and the requested page is extracted from the ``page`` query
+    parameter.
+    """
+    page_length = getattr(settings, "DJANGO_MESSAGES_PAGE_LENGTH", 0)
+    if not page_length:
+        return queryset
+
+    from django.core.paginator import Paginator, InvalidPage
+
+    paginator = Paginator(queryset, page_length)
+    page_number = request.GET.get("page") or 1
+    try:
+        return paginator.page(page_number)
+    except InvalidPage:
+        return paginator.page(1)

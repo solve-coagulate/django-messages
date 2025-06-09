@@ -1,0 +1,16 @@
+{% load i18n %}
+{% if message_list.paginator and message_list.has_other_pages %}
+<div class="pagination">
+    <span class="step-links">
+        {% if message_list.has_previous %}
+            <a href="?page={{ message_list.previous_page_number }}">{% trans "Previous" %}</a>
+        {% endif %}
+        <span class="current">
+            {% blocktrans with page=message_list.number num_pages=message_list.paginator.num_pages %}Page {{ page }} of {{ num_pages }}{% endblocktrans %}
+        </span>
+        {% if message_list.has_next %}
+            <a href="?page={{ message_list.next_page_number }}">{% trans "Next" %}</a>
+        {% endif %}
+    </span>
+</div>
+{% endif %}

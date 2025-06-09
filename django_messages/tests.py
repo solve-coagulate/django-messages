@@ -2,6 +2,7 @@ from django.urls import reverse
 
 from django.core.exceptions import ValidationError
 from django.test import TestCase
+from django.test.utils import override_settings
 from django.test.client import Client, RequestFactory
 from django.utils import timezone
 from django.utils.encoding import force_str
@@ -9,7 +10,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.template import Template, Context
 from django_messages.forms import ComposeForm
 from django_messages.models import Message
-from django_messages.utils import format_subject, format_quote
+from django_messages.utils import format_subject, format_quote, paginate_queryset
 from django_messages.context_processors import inbox
 
 from .utils import get_user_model
@@ -302,3 +303,60 @@ class ViewMessageTemplateTestCase(TestCase):
             response,
             reverse("messages_reply", args=[self.message.pk]),
         )
+
+
+class PaginationTestCase(TestCase):
+    """Tests for optional pagination support."""
+
+    def setUp(self):
+        self.sender = User.objects.create_user(
+            "page_sender",
+            "sender@example.com",
+            "123456",
+        )
+        self.recipient = User.objects.create_user(
+            "page_recipient",
+            "recipient@example.com",
+            "123456",
+        )
+        for i in range(3):
+            Message.objects.create(
+                sender=self.sender,
+                recipient=self.recipient,
+                subject=f"Subject {i}",
+                body="Body",
+            )
+        self.factory = RequestFactory()
+        self.client = Client()
+        assert self.client.login(username="page_recipient", password="123456")
+
+    def test_pagination_disabled_returns_queryset(self):
+        request = self.factory.get("/")
+        with override_settings(DJANGO_MESSAGES_PAGE_LENGTH=0):
+            result = paginate_queryset(
+                request, Message.objects.inbox_for(self.recipient)
+            )
+        from django.core.paginator import Page
+
+        self.assertNotIsInstance(result, Page)
+        self.assertEqual(result.count(), 3)
+
+    def test_paginate_queryset_invalid_page(self):
+        request = self.factory.get("/", {"page": "99"})
+        with override_settings(DJANGO_MESSAGES_PAGE_LENGTH=2):
+            page = paginate_queryset(
+                request,
+                Message.objects.inbox_for(self.recipient).order_by("id"),
+            )
+        self.assertEqual(page.number, 1)
+        self.assertEqual(len(page), 2)
+
+    def test_inbox_view_paginated(self):
+        with override_settings(DJANGO_MESSAGES_PAGE_LENGTH=2):
+            response = self.client.get(reverse("messages_inbox"))
+            self.assertEqual(len(response.context["message_list"]), 2)
+            self.assertEqual(response.context["message_list"].paginator.num_pages, 2)
+            self.assertIn(
+                "django_messages/_pagination.html",
+                [t.name for t in response.templates if t.name],
+            )
