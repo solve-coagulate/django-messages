@@ -24,6 +24,7 @@
 {% endfor %}
     </tbody>
 </table>
+{% include "django_messages/_pagination.html" %}
 {% else %}
 <p>{% trans "No messages." %}</p>
 {% endif %}

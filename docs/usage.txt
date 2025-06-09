@@ -95,3 +95,10 @@ If you do want to disable django-messages from sending either a
 not installed' then set the following in your django settings::
 
     DJANGO_MESSAGES_NOTIFY = False
+
+To paginate long lists of messages, set ``DJANGO_MESSAGES_PAGE_LENGTH`` to the
+desired page size::
+
+    DJANGO_MESSAGES_PAGE_LENGTH = 20
+
+Pagination is disabled when the setting is omitted or evaluates to ``False``.
