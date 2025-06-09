@@ -70,5 +70,18 @@ done to make situations possible where notification is on pythonpath but
 should not be used, or where notification is another python package, such as
 django-notification which has the same name.
 
+Testing
+-------
+
+The helper script ``runalltests.sh`` installs ``tox`` and invokes it. ``tox`` executes the test matrix defined in ``tox.ini`` so no
+environments are listed manually in the script.
+Currently we run:
+
+- Python 3.12 with Django 5.2, 4.2, 3.2 and 2.2
+- Python 3.11 with Django 5.2
+
+Other historical environments have been removed from ``tox.ini`` so the matrix
+reflects exactly what is executed.
+
 
 
