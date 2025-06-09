@@ -15,3 +15,6 @@ Notes:
   environments that actually run (Python 3.12 with Django 5.2/4.2/3.2/2.2 and
   Python 3.11 with Django 5.2). This avoids the confusion of skipped
   environments.
+- Running the entire tox matrix can be time consuming. When iterating locally,
+  it's usually enough to execute a single environment, e.g. ``./runalltests.sh
+  -e py3.12-d5.2``.

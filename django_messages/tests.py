@@ -271,3 +271,34 @@ class RecipientFilterTestCase(TestCase):
         )
         assert not form.is_valid()
         assert self.user2.username in force_str(form.errors)
+
+
+class ViewMessageTemplateTestCase(TestCase):
+    """Ensure the message detail template renders correctly."""
+
+    def setUp(self):
+        self.sender = User.objects.create_user(
+            "sender", "sender@example.com", "123456"
+        )
+        self.recipient = User.objects.create_user(
+            "recipient", "recipient@example.com", "123456"
+        )
+        self.message = Message.objects.create(
+            sender=self.sender,
+            recipient=self.recipient,
+            subject="Subject",
+            body="Body",
+        )
+        self.client = Client()
+
+    def test_detail_view_renders(self):
+        """Viewing a message should render without template errors."""
+        assert self.client.login(username="recipient", password="123456")
+        response = self.client.get(
+            reverse("messages_detail", args=[self.message.pk])
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            reverse("messages_reply", args=[self.message.pk]),
+        )
